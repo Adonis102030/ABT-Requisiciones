@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ABT Requisiciones - Arturo Bisonó Toribio, S.R.L.</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <h1>ARTURO BISONÓ TORIBIO, S.R.L.</h1>
+  <p>Requisiciones de Transporte Externo</p>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="procesar">Procesar Requisiciones</button>
+  <button class="tab-btn" data-tab="tarifarios">Tarifarios</button>
+  <button class="tab-btn" data-tab="ajustes">Ajustes</button>
+</nav>
+
+<main>
+
+<!-- ================= TAB: PROCESAR ================= -->
+<section id="tab-procesar" class="tab-panel active">
+
+  <div class="card">
+    <h2>1. Cargar Control de Viajes Rentados</h2>
+    <p class="hint">Sube siempre el Excel más reciente de "Control de Viajes Rentados". Se leerán todas las hojas de mes.</p>
+    <input type="file" id="fileViajes" accept=".xlsx,.xls">
+    <span id="viajesStatus" class="status"></span>
+  </div>
+
+  <div class="card" id="fechaCard" style="display:none;">
+    <h2>2. Elegir Rango de Fechas</h2>
+    <div class="row">
+      <label>Desde: <input type="date" id="fechaInicioInput"></label>
+      <label>Hasta: <input type="date" id="fechaFinInput"></label>
+      <button id="btnBuscarFecha" class="btn primary">Buscar</button>
+    </div>
+    <span id="fechaStatus" class="status"></span>
+  </div>
+
+  <div class="card" id="tablaCard" style="display:none;">
+    <h2>3. Datos del Día — Revisar y Ajustar</h2>
+    <div class="row bulk-actions">
+      <span>Acciones masivas:</span>
+      <button id="btnAplicarTodos" class="btn small">Aplica +5% (todos)</button>
+      <button id="btnNoAplicarTodos" class="btn small">No aplica -5% (todos)</button>
+    </div>
+    <div class="table-scroll">
+      <table id="tablaDatos">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Zona</th>
+            <th>Paraje</th>
+            <th>Camión</th>
+            <th>QQS</th>
+            <th>Cant.Cl</th>
+            <th>Contratista</th>
+            <th>Chofer</th>
+            <th>Categoría</th>
+            <th>Zona Tarifario</th>
+            <th>Tarifa RD$</th>
+            <th>Aplica +5%</th>
+            <th>Descarga RD$</th>
+            <th>Transportista</th>
+            <th>Destino</th>
+          </tr>
+        </thead>
+        <tbody id="tablaDatosBody"></tbody>
+      </table>
+    </div>
+    <div class="row" style="margin-top:14px;">
+      <button id="btnGenerar" class="btn primary large">Generar Requisiciones</button>
+      <span id="generarStatus" class="status"></span>
+    </div>
+  </div>
+
+  <div class="card" id="previewCard" style="display:none;">
+    <h2>4. Requisiciones Generadas</h2>
+    <div class="row" style="margin-bottom:14px;">
+      <button id="btnDescargarPdf" class="btn primary">Descargar PDF (Listado Completo)</button>
+      <button id="btnDescargarExcel" class="btn">Descargar Excel (Listado Completo)</button>
+    </div>
+    <div class="summary-box" id="summaryBox"></div>
+    <div id="requisicionesContainer"></div>
+  </div>
+
+</section>
+
+<!-- ================= TAB: TARIFARIOS ================= -->
+<section id="tab-tarifarios" class="tab-panel">
+
+  <div class="card">
+    <h2>Mapeo Camión → Categoría de Tarifario</h2>
+    <p class="hint">Define qué tarifario aplica según el tipo de camión del control de viajes.</p>
+    <table id="tablaCamionMap" class="compact-table">
+      <thead><tr><th>Tipo de Camión</th><th>Categoría</th><th></th></tr></thead>
+      <tbody id="tablaCamionMapBody"></tbody>
+    </table>
+    <button id="btnAddCamion" class="btn small">+ Agregar tipo de camión</button>
+  </div>
+
+  <div class="card">
+    <h2>Camiones Pequeños</h2>
+    <div class="row">
+      <label class="file-label">Actualizar desde Excel, PDF o imagen: <input type="file" data-cat="pequenos" class="tarifarioUpload" accept=".xlsx,.xls,.pdf,.png,.jpg,.jpeg,.webp"></label>
+      <span class="status" data-status-for="pequenos"></span>
+    </div>
+    <p class="hint">El Excel reemplaza toda la tabla. El PDF o imagen solo actualiza las zonas que detecte: sobrescribe las que ya existen y agrega las nuevas, sin duplicar.</p>
+    <div class="table-scroll">
+      <table class="tarifario-table" data-cat="pequenos">
+        <thead><tr><th>Zona</th><th>-5%</th><th>Tarifa</th><th>+5%</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <button class="btn small addTarifaRow" data-cat="pequenos">+ Agregar zona</button>
+  </div>
+
+  <div class="card">
+    <h2>Camiones Medianos</h2>
+    <div class="row">
+      <label class="file-label">Actualizar desde Excel, PDF o imagen: <input type="file" data-cat="medianos" class="tarifarioUpload" accept=".xlsx,.xls,.pdf,.png,.jpg,.jpeg,.webp"></label>
+      <span class="status" data-status-for="medianos"></span>
+    </div>
+    <p class="hint">El Excel reemplaza toda la tabla. El PDF o imagen solo actualiza las zonas que detecte: sobrescribe las que ya existen y agrega las nuevas, sin duplicar.</p>
+    <div class="table-scroll">
+      <table class="tarifario-table" data-cat="medianos">
+        <thead><tr><th>Zona</th><th>-5%</th><th>Tarifa</th><th>+5%</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <button class="btn small addTarifaRow" data-cat="medianos">+ Agregar zona</button>
+  </div>
+
+  <div class="card">
+    <h2>Fletes de Patanas</h2>
+    <div class="row">
+      <label class="file-label">Actualizar desde Excel, PDF o imagen: <input type="file" data-cat="patanas" class="tarifarioUpload" accept=".xlsx,.xls,.pdf,.png,.jpg,.jpeg,.webp"></label>
+      <span class="status" data-status-for="patanas"></span>
+    </div>
+    <p class="hint">El Excel reemplaza toda la tabla. El PDF o imagen solo actualiza las zonas que detecte: sobrescribe las que ya existen y agrega las nuevas, sin duplicar.</p>
+    <div class="table-scroll">
+      <table class="tarifario-table" data-cat="patanas">
+        <thead><tr><th>Zona</th><th>-5%</th><th>Tarifa</th><th>+5%</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <button class="btn small addTarifaRow" data-cat="patanas">+ Agregar zona</button>
+  </div>
+
+</section>
+
+<!-- ================= TAB: AJUSTES ================= -->
+<section id="tab-ajustes" class="tab-panel">
+
+  <div class="card">
+    <h2>Secuencia de Folio</h2>
+    <p class="hint">Número de folio que se asignará a la próxima requisición generada (como el consecutivo del talonario en papel).</p>
+    <div class="row">
+      <label>Próximo folio: <input type="number" id="nextFolioInput" min="1" style="width:120px;"></label>
+      <button id="btnGuardarFolio" class="btn primary">Guardar</button>
+    </div>
+    <span id="folioStatus" class="status"></span>
+  </div>
+
+  <div class="card">
+    <h2>Mapeo Paraje → Zona (aprendido)</h2>
+    <p class="hint">Correcciones manuales que hiciste al emparejar un "Paraje" del control de viajes con una zona del tarifario. Se recuerdan automáticamente para la próxima vez.</p>
+    <div class="table-scroll">
+      <table id="tablaZonaMap" class="compact-table">
+        <thead><tr><th>Categoría</th><th>Paraje</th><th>Zona Tarifario</th><th></th></tr></thead>
+        <tbody id="tablaZonaMapBody"></tbody>
+      </table>
+    </div>
+    <button id="btnLimpiarZonaMap" class="btn small danger">Borrar todos los mapeos aprendidos</button>
+  </div>
+
+</section>
+
+</main>
+
+<!-- ============ Modal: revisar tarifario importado de PDF/imagen ============ -->
+<div id="tarifarioImportModal" class="modal-overlay" style="display:none;">
+  <div class="modal">
+    <h3>Revisar zonas detectadas</h3>
+    <p class="hint" id="tarifarioImportHint"></p>
+    <div class="table-scroll">
+      <table id="tarifarioImportTable" class="compact-table">
+        <thead><tr><th>Zona</th><th>-5%</th><th>Tarifa</th><th>+5%</th><th>Estado</th><th></th></tr></thead>
+        <tbody id="tarifarioImportTableBody"></tbody>
+      </table>
+    </div>
+    <div class="row" style="margin-top:14px;">
+      <button id="btnTarifarioImportConfirmar" class="btn primary">Aplicar cambios</button>
+      <button id="btnTarifarioImportCancelar" class="btn">Cancelar</button>
+      <span id="tarifarioImportStatus" class="status"></span>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
